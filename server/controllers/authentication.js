@@ -1,3 +1,51 @@
+const User = require("../models/user");
+const jwt = require('jwt-simple');
+const config = require('../config');
+
+function tokenForUser(user){
+	return jwt.encode({ sub: user.id }, config.secret);
+}
+
 exports.signup = function(req,res,next){
-	res.send({success:'true'});
+	const email = req.body.email;
+	const password = req.body.password;
+
+	if(!email || !password){
+		return res.status(422).send({error:'You must enter an Email and a password'})
+	}
+
+	//see if a user with the given email exists
+	User.findOne({email:email}, function(err, existingUser) {
+		if(err){return next(err);}
+
+		//if an user with email exists return an error
+		if (existingUser) {
+			return res.status(422).send({error: 'Email ALready in use'});
+		}
+
+		//if a user with e-mail does not exist, create and save user record
+		const user = new User({
+			email:email,
+			password:password
+		});
+
+		user.save(function(err){
+			if (err) {return next(err);}
+		
+		})
+
+			//respond to request indicating the user was created
+
+		res.json({success:true});
+
+
+
+	});
+
+
+
+
+
+
+
 }
